@@ -1,6 +1,7 @@
-# 幻影坦克模块
 
 <div align="center">
+
+# 幻影坦克插件
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 ![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue)
@@ -14,3 +15,6 @@
 
 </div>
 
+## 指令说明
+
+- `幻影坦克`: 随后依次发送表图和里图，会生成相应的幻影坦克
