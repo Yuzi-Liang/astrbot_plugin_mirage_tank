@@ -9,6 +9,7 @@
 </div>
 
 <div align="center">
+
 [![Moe Counter](https://count.getloli.com/get/@MirageTank?theme=minecraft&padding=5&offset=0&align=top&scale=1&pixelated=1&darkmode=auto)](https://github.com/Yuzi-Liang/astrbot_plugin_mirage_tank)
 
 </div>
