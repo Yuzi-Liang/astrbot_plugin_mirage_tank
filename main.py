@@ -5,10 +5,20 @@ from astrbot.api.star import Context, Star, register
 from astrbot.api.message_components import Image as AstrImage
 from astrbot.api import logger
 from astrbot.core import AstrBotConfig
-from astrbot.core.utils.session_waiter import session_waiter, SessionController
+from astrbot.core.utils.session_waiter import session_waiter, SessionController, SessionFilter
 from .processor.inference import generate_mirage
 from .processor.utils import save_image_as_png
 
+
+class UserSessionFilter(SessionFilter):
+    """确保每个用户的会话独立"""
+    def __init__(self, session_id: str):
+        self.session_id = session_id
+
+    def filter(self, event: AstrMessageEvent) -> str:
+        current_session_id = event.get_session_id()
+        # 只接受同一个用户发来的消息
+        return self.session_id if current_session_id == self.session_id else ""
 
 @register("miragetank", "poisama", "幻影坦克生成插件", "1.2")
 class MirageTankPlugin(Star):
@@ -111,7 +121,8 @@ class MirageTankPlugin(Star):
                         controller.stop()
 
             try:
-                await image_waiter(event)
+                session_id = event.get_session_id()
+                await image_waiter(event, session_filter=UserSessionFilter(session_id))
             except TimeoutError as _:  # 当超时后，会话控制器会抛出 TimeoutError
                 yield event.plain_result("已超时，幻影坦克生成已取消喵")
             finally:
