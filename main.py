@@ -22,7 +22,7 @@ class UserSessionFilter(SessionFilter):
         return self.session_id if current_session_id == self.session_id else ""
 
 
-@register("miragetank", "poisama", "幻影坦克生成插件", "1.2")
+@register("miragetank", "poisama", "幻影坦克生成插件", "1.2.1")
 class MirageTankPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -62,10 +62,14 @@ class MirageTankPlugin(Star):
                     controller.stop()  # 停止会话控制器，会立即结束。
                     return
 
-                img_msg = event.message_obj.message[0]
+                img_msg = None
+                for comp in event.message_obj.message:
+                    if isinstance(comp, AstrImage):
+                        img_msg = comp
+                        break
 
                 # 如果用户发送的不是图片，则要求用户重新发送
-                if not isinstance(img_msg, AstrImage):
+                if img_msg is None:
                     await event.send(event.plain_result("这不是一张图片，请重新发送喵"))
                     return
 
