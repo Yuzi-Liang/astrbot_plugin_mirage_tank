@@ -10,7 +10,7 @@ from .processor.inference import generate_mirage
 from .processor.utils import save_image_as_png
 
 
-@register("miragetank", "poisama", "幻影坦克生成插件", "1.1")
+@register("miragetank", "poisama", "幻影坦克生成插件", "1.2")
 class MirageTankPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
