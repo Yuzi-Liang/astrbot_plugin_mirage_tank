@@ -31,6 +31,14 @@
 - `彩色幻影坦克`: 类似`幻影坦克`，只是输出结果为彩色
 - `取消`: 在等待输入图片时可以用于取消生成
 
+## 演示截图
+
+<div align="center">
+
+![示例](https://raw.githubusercontent.com/Yuzi-Liang/astrbot_plugin_mirage_tank/master/example.png)
+
+</div>
+
 ## TODO
 - 更新彩色幻影坦克生成算法，现在效果还比较一般，特别是对于两张差别很大的图片
 - 支持更多藏图片的方法
