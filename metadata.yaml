@@ -1,5 +1,5 @@
 name: mirage_tank
-desc: 用于生成幻影坦克图片的插件
+desc: 用于生成幻影坦克图片的插件，支持黑白和彩色两种模式
 version: v1.2
 author: poisama
 repo: https://github.com/Yuzi-Liang/astrbot_plugin_mirage_tank

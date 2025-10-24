@@ -103,11 +103,17 @@ class MirageTankPlugin(Star):
     # 普通幻影坦克命令
     @filter.command("幻影坦克")
     async def mirage_gray(self, event: AstrMessageEvent):
+        """
+        生成幻影坦克
+        """
         async for _ in self._handle_mirage_session(event, mode="gray"):
             yield _
 
     # 彩色幻影坦克命令
     @filter.command("彩色幻影坦克")
     async def mirage_color(self, event: AstrMessageEvent):
+        """
+        生成彩色幻影坦克
+        """
         async for _ in self._handle_mirage_session(event, mode="color"):
             yield _

@@ -75,7 +75,9 @@ async def _generate_color_tank(front_img_path, back_img_path, save_dir):
 
 
 def _generate_color_tank_sync(front_img_path, back_img_path, save_dir, a=12, b=7):
-    """同步核心算法（改写自 CSDN colorful_shio）"""
+    """
+    同步核心算法（改写自 CSDN colorful_shio）
+    """
 
     image_f = Image.open(front_img_path).convert("RGB")
     image_b = Image.open(back_img_path).convert("RGB")
