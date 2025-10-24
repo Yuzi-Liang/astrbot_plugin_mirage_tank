@@ -1,27 +1,36 @@
 import asyncio
+import os
 
-from PIL import Image, ImageEnhance
+from PIL import Image
 import numpy as np
 import tempfile
 
+from ..config import TEMP_DIR
 
-async def generate_mirage(front_img_path, back_img_path, mode="gray"):
+
+async def generate_mirage(front_img_path, back_img_path, save_dir: str = TEMP_DIR, mode="gray"):
     """
     合成幻影坦克图片（灰度模式）
     支持模式：
         - gray  : 黑白模式
         - color : 彩色模式
     """
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+    else:
+        save_dir = None
+
     if mode == "gray":
-        return await _generate_gray_tank(front_img_path, back_img_path)
+        return await _generate_gray_tank(front_img_path, back_img_path, save_dir)
     elif mode == "color":
-        return await _generate_color_tank(front_img_path, back_img_path)
+        return await _generate_color_tank(front_img_path, back_img_path, save_dir)
 
 
-async def _generate_gray_tank(front_img_path, back_img_path, a=5, b=5):
+async def _generate_gray_tank(front_img_path, back_img_path, save_dir, a=5, b=5):
     """
     生成灰度幻影坦克
     """
+
     image_f = Image.open(front_img_path).convert("L")
     image_b = Image.open(back_img_path).convert("L")
 
@@ -48,12 +57,12 @@ async def _generate_gray_tank(front_img_path, back_img_path, a=5, b=5):
 
     img = Image.fromarray(new_pixels, mode="RGBA")
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".png", dir=save_dir) as temp_file:
         img.save(temp_file, format="PNG")
         return temp_file.name
 
 
-async def _generate_color_tank(front_img_path, back_img_path):
+async def _generate_color_tank(front_img_path, back_img_path, save_dir):
     """
     生成彩色幻影坦克
     """
@@ -61,11 +70,11 @@ async def _generate_color_tank(front_img_path, back_img_path):
     return await loop.run_in_executor(
         None,
         _generate_color_tank_sync,
-        front_img_path, back_img_path,
+        front_img_path, back_img_path, save_dir,
     )
 
 
-def _generate_color_tank_sync(front_img_path, back_img_path, a=12, b=7):
+def _generate_color_tank_sync(front_img_path, back_img_path, save_dir, a=12, b=7):
     """同步核心算法（改写自 CSDN colorful_shio）"""
 
     image_f = Image.open(front_img_path).convert("RGB")
@@ -105,6 +114,6 @@ def _generate_color_tank_sync(front_img_path, back_img_path, a=12, b=7):
 
     img = Image.fromarray(new_pixels, mode="RGBA")
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".png", dir=save_dir) as temp_file:
         img.save(temp_file, format="PNG")
         return temp_file.name
