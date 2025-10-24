@@ -1,0 +1,14 @@
+# 忽略 Python 缓存文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 忽略临时文件和日志
+*.log
+*.tmp
+*.temp
+
+# 忽略虚拟环境
+venv/
+env/
