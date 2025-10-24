@@ -1,8 +1,14 @@
 {
-  "TIMEOUT_SEC": {
+  "timeout": {
     "description": "超时时间",
     "type": "int",
     "hint": "单位：秒，默认值30s",
     "default": 30
+  },
+  "max_img_size": {
+    "description": "图片最大尺寸",
+    "type": "int",
+    "hint": "单位：MB，默认值10MB",
+    "default": 10
   }
 }

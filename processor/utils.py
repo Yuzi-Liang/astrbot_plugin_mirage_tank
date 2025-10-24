@@ -8,7 +8,12 @@ from PIL import Image
 from ..config import TEMP_DIR
 
 
-async def save_image_as_png(url, save_dir: str = TEMP_DIR, timeout_sec: int = 30):
+class ImageTooLargeError(Exception):
+    """自定义异常：图片体积过大"""
+    pass
+
+
+async def save_image_as_png(url, save_dir: str = TEMP_DIR, timeout_sec: int = 30, max_image_size: int = 10 * 1024 * 1024):
     """
     从指定 URL 下载图片并保存到本地临时png文件
     返回保存的文件路径
@@ -24,6 +29,10 @@ async def save_image_as_png(url, save_dir: str = TEMP_DIR, timeout_sec: int = 30
                 if resp.status != 200:
                     raise RuntimeError(f"图片下载失败: HTTP {resp.status}")
                 content = await resp.read()
+                if len(content) > max_image_size:
+                    raise ImageTooLargeError(
+                        f"图片体积超出限制 ({len(content) / 1024 / 1024:.2f}MB > {max_image_size / 1024 / 1024}MB)"
+                    )
         except asyncio.TimeoutError:
             raise TimeoutError(f"下载图片超时（>{timeout_sec}秒）: {url}")
         except aiohttp.ClientError as e:

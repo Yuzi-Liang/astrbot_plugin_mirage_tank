@@ -15,7 +15,20 @@ class MirageTankPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.config = config
-        self.timeout = self.config.get("TIMEOUT_SEC", 30)
+        self.timeout = self.config.get("timeout", 30)
+        self.max_img_size = self.config.get("max_img_size", 10)
+
+        if self.timeout <= 0 or self.timeout >= 3600:
+            logger.warning("超时时间不合理，已回退为 30s。")
+            self.timeout = 30
+            self.config["timeout"] = 30
+            self.config.save_config()
+
+        if self.max_img_size <= 0 or self.max_img_size >= 1024:
+            logger.warning("最大图片尺寸不合理，已回退为 10MB。")
+            self.max_img_size = 10
+            self.config["max_img_size"] = 10
+            self.config.save_config()
 
     async def _handle_mirage_session(self, event: AstrMessageEvent, mode: str):
         """
@@ -46,7 +59,7 @@ class MirageTankPlugin(Star):
 
                 # 获取用户发送的图片
                 try:
-                    img_path = await save_image_as_png(img_msg.url)
+                    img_path = await save_image_as_png(img_msg.url, max_image_size=self.max_img_size * 1024 * 1024)
                 except Exception as e:
                     logger.error(f"下载图片失败: " + str(e))
                     await event.send(event.plain_result("图片下载失败，请稍后再试喵"))
