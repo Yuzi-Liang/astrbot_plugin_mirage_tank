@@ -1,15 +1,11 @@
 import asyncio
 
-from PIL import Image
+from PIL import Image, ImageEnhance
 import numpy as np
 import tempfile
 
 
-WHITE_RGBA = np.array([255, 255, 255, 255], dtype=np.uint8)
-BLACK_RGBA = np.array([0, 0, 0, 0], dtype=np.uint8)
-
-
-async def generate_mirage(front_img_path, back_img_path, mode="gray", a=12, b=7):
+async def generate_mirage(front_img_path, back_img_path, mode="gray"):
     """
     合成幻影坦克图片（灰度模式）
     支持模式：
@@ -18,95 +14,97 @@ async def generate_mirage(front_img_path, back_img_path, mode="gray", a=12, b=7)
     """
     if mode == "gray":
         return await _generate_gray_tank(front_img_path, back_img_path)
-    else:
-        return await _generate_color_tank(front_img_path, back_img_path, a, b)
+    elif mode == "color":
+        return await _generate_color_tank(front_img_path, back_img_path)
 
 
-async def _generate_gray_tank(front_img_path, back_img_path):
+async def _generate_gray_tank(front_img_path, back_img_path, a=5, b=5):
     """
     生成灰度幻影坦克
     """
-    wimg = Image.open(front_img_path).convert("L")
-    bimg = Image.open(back_img_path).convert("L").resize(wimg.size)
+    image_f = Image.open(front_img_path).convert("L")
+    image_b = Image.open(back_img_path).convert("L")
 
-    wpix = np.array(wimg).astype("float64")
-    bpix = np.array(bimg).astype("float64")
+    # 尺寸对齐
+    w, h = min(image_f.width, image_b.width), min(image_f.height, image_b.height)
+    image_f = image_f.resize((w, h), Image.Resampling.LANCZOS)
+    image_b = image_b.resize((w, h), Image.Resampling.LANCZOS)
 
-    wpix = wpix * 0.5 + 128
-    bpix *= 0.5
+    array_f = np.array(image_f, dtype=np.float64)
+    array_b = np.array(image_b, dtype=np.float64)
+    new_pixels = np.zeros((h, w, 4), dtype=np.uint8)
 
-    a = 1.0 - wpix / 255.0 + bpix / 255.0
-    r = np.where(abs(a) > 1e-6, bpix / a, 255.0)
+    # 灰度公式（简化版）
+    wf = array_f * a / 10 + 128
+    wb = array_b * b / 10
+    alpha = 1.0 - wf / 255.0 + wb / 255.0
+    R_new = np.where(np.abs(alpha) > 1e-6, wb / alpha, 255.0)
 
-    pixels = np.dstack((r, r, r, a * 255.0))
-    pixels[pixels > 255] = 255
+    # 拼接RGBA通道
+    new_pixels[:, :, 0] = np.clip(R_new, 0, 255).astype(np.uint8)
+    new_pixels[:, :, 1] = new_pixels[:, :, 0]
+    new_pixels[:, :, 2] = new_pixels[:, :, 0]
+    new_pixels[:, :, 3] = np.clip(alpha * 255.0, 0, 255).astype(np.uint8)
+
+    img = Image.fromarray(new_pixels, mode="RGBA")
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
-        Image.fromarray(pixels.astype("uint8"), "RGBA").save(temp_file, format="PNG")
+        img.save(temp_file, format="PNG")
         return temp_file.name
 
 
-async def _generate_color_tank(front_img_path, back_img_path, wlight=1.0, blight=0.25, wcolor=0.5, bcolor=0.7):
+async def _generate_color_tank(front_img_path, back_img_path):
     """
     生成彩色幻影坦克
-    wlight: 表图亮度调节因子 (推荐 1.0~1.3)
-    blight: 里图亮度调节因子 (推荐 0.15~0.3)
-    wcolor: 表图色彩保留比例 (推荐 0.4~0.6)
-    bcolor: 里图色彩保留比例 (推荐 0.6~0.8)
     """
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(
         None,
         _generate_color_tank_sync,
         front_img_path, back_img_path,
-        wlight, blight, wcolor, bcolor
     )
 
 
-def _generate_color_tank_sync(front_img_path, back_img_path, wlight=1.0, blight=0.25, wcolor=0.5, bcolor=0.7):
-    """同步核心算法"""
+def _generate_color_tank_sync(front_img_path, back_img_path, a=12, b=7):
+    """同步核心算法（改写自 CSDN colorful_shio）"""
 
-    # 打开图片并统一尺寸
     image_f = Image.open(front_img_path).convert("RGB")
     image_b = Image.open(back_img_path).convert("RGB")
 
+    # 尺寸对齐
     w, h = min(image_f.width, image_b.width), min(image_f.height, image_b.height)
-    image_f = image_f.resize((w, h), Image.Resampling.CATMULLROM)
-    image_b = image_b.resize((w, h), Image.Resampling.CATMULLROM)
+    image_f = image_f.resize((w, h), Image.Resampling.LANCZOS)
+    image_b = image_b.resize((w, h), Image.Resampling.LANCZOS)
 
-    # 转为 numpy 数组 (0~1)
-    wpix = np.array(image_f, dtype=np.float32) / 255.0
-    bpix = np.array(image_b, dtype=np.float32) / 255.0
+    array_f = np.array(image_f, dtype=np.float64)
+    array_b = np.array(image_b, dtype=np.float64)
+    new_pixels = np.zeros((h, w, 4), dtype=np.uint8)
 
-    # 调整亮度
-    wpix *= wlight
-    bpix *= blight
+    # 核心公式（LAB近似）
+    Rf, Gf, Bf = array_f[:, :, 0] * a / 10, array_f[:, :, 1] * a / 10, array_f[:, :, 2] * a / 10
+    Rb, Gb, Bb = array_b[:, :, 0] * b / 10, array_b[:, :, 1] * b / 10, array_b[:, :, 2] * b / 10
 
-    # 计算灰度
-    wgray = np.minimum(np.mean(wpix, axis=2, keepdims=True), 1.0)
-    bgray = np.minimum(np.mean(bpix, axis=2, keepdims=True), 1.0)
+    delta_r = Rb - Rf
+    delta_g = Gb - Gf
+    delta_b = Bb - Bf
+    coe_a = 8 + 255 / 256 + (delta_r - delta_b) / 256
+    coe_b = 4 * delta_r + 8 * delta_g + 6 * delta_b + ((delta_r - delta_b) * (Rb + Rf)) / 256 + (delta_r ** 2 - delta_b ** 2) / 512
+    A_new = 255 + coe_b / (2 * coe_a)
 
-    # 调整色彩保真度
-    wpix = wpix * wcolor + wgray * (1.0 - wcolor)
-    bpix = bpix * bcolor + bgray * (1.0 - bcolor)
+    A_new = np.clip(A_new, 0, 255)
+    # 防止除 0
+    A_safe = np.where(A_new < 1, 1, A_new)
+    R_new = np.clip((255 * Rb * b / 10) / A_safe, 0, 255)
+    G_new = np.clip((255 * Gb * b / 10) / A_safe, 0, 255)
+    B_new = np.clip((255 * Bb * b / 10) / A_safe, 0, 255)
 
-    # 幻影坦克公式
-    drgb = 1.0 - wpix + bpix
+    new_pixels[:, :, 0] = R_new.astype(np.uint8)
+    new_pixels[:, :, 1] = G_new.astype(np.uint8)
+    new_pixels[:, :, 2] = B_new.astype(np.uint8)
+    new_pixels[:, :, 3] = A_new.astype(np.uint8)
 
-    # alpha = min( max(luma(d), max(brgb)), 1.0 )
-    a_lum = drgb[:, :, 0] * 0.2126 + drgb[:, :, 1] * 0.7152 + drgb[:, :, 2] * 0.0722
-    bmax = np.max(bpix, axis=2)
-    a = np.minimum(np.maximum(a_lum, bmax), 1.0)
+    img = Image.fromarray(new_pixels, mode="RGBA")
 
-    # 输出 RGB = brgb / a
-    denom = np.maximum(a[:, :, None], 1e-6)
-    out_rgb = np.clip((bpix / denom) * 255.0, 0.0, 255.0).astype(np.uint8)
-    out_alpha = np.clip(a * 255.0, 0.0, 255.0).astype(np.uint8)
-
-    rgba = np.concatenate([out_rgb, out_alpha[:, :, None]], axis=2)
-    img = Image.fromarray(rgba, mode="RGBA")
-
-    # 保存临时文件
     with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
-        img.save(temp_file.name, format="PNG")
+        img.save(temp_file, format="PNG")
         return temp_file.name
