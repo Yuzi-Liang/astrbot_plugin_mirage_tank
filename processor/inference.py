@@ -111,7 +111,8 @@ def _generate_color_tank_sync(front_img_path, back_img_path, save_dir, a=12, b=7
         delta_g = Gb - Gf
         delta_b = Bb - Bf
         coe_a = 8 + 255 / 256 + (delta_r - delta_b) / 256
-        coe_b = 4 * delta_r + 8 * delta_g + 6 * delta_b + ((delta_r - delta_b) * (Rb + Rf)) / 256 + (delta_r ** 2 - delta_b ** 2) / 512
+        coe_b = 4 * delta_r + 8 * delta_g + 6 * delta_b + ((delta_r - delta_b) * (Rb + Rf)) / 256 + (
+                    delta_r ** 2 - delta_b ** 2) / 512
         A_new = 255 + coe_b / (2 * coe_a)
 
         A_new = np.clip(A_new, 0, 255)

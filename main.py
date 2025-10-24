@@ -12,6 +12,7 @@ from .processor.utils import save_image_as_png
 
 class UserSessionFilter(SessionFilter):
     """确保每个用户的会话独立"""
+
     def __init__(self, session_id: str):
         self.session_id = session_id
 
@@ -19,6 +20,7 @@ class UserSessionFilter(SessionFilter):
         current_session_id = event.get_session_id()
         # 只接受同一个用户发来的消息
         return self.session_id if current_session_id == self.session_id else ""
+
 
 @register("miragetank", "poisama", "幻影坦克生成插件", "1.2")
 class MirageTankPlugin(Star):

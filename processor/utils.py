@@ -13,7 +13,8 @@ class ImageTooLargeError(Exception):
     pass
 
 
-async def save_image_as_png(url, save_dir: str = TEMP_DIR, timeout_sec: int = 30, max_image_size: int = 10 * 1024 * 1024):
+async def save_image_as_png(url, save_dir: str = TEMP_DIR, timeout_sec: int = 30,
+                            max_image_size: int = 10 * 1024 * 1024):
     """
     从指定 URL 下载图片并保存到本地临时png文件
     返回保存的文件路径
