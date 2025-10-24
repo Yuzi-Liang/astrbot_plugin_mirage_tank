@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
@@ -82,12 +82,19 @@ class MirageTankPlugin(Star):
                 # 清理资源
                 finally:
                     if controller.state == "finished":
-                        if hasattr(controller, "front_img_path"):
-                            os.unlink(controller.front_img_path)
-                        if back_img_path and os.path.exists(back_img_path):
-                            os.unlink(back_img_path)
-                        if result_path and os.path.exists(result_path):
-                            os.unlink(result_path)
+                        for path_label, file_path in [
+                            ("front_img_path", getattr(controller, "front_img_path", None)),
+                            ("back_img_path", back_img_path),
+                            ("result_path", result_path),
+                        ]:
+                            try:
+                                if file_path:
+                                    p = Path(file_path)
+                                    if p.exists():
+                                        p.unlink()
+                            except Exception as e:
+                                logger.warning(f"清理文件失败: {path_label}: {file_path} ({e})")
+
                         controller.stop()
 
             try:
