@@ -15,7 +15,7 @@ class MirageTankPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.config = config
-        self.timeout = self.config.get("TIMEOUT_SEC", "30")
+        self.timeout = self.config.get("TIMEOUT_SEC", 30)
 
     async def _handle_mirage_session(self, event: AstrMessageEvent, mode: str):
         """
@@ -29,6 +29,7 @@ class MirageTankPlugin(Star):
                 """
                 等待发送图片作为表图/里图
                 """
+                back_img_path = result_path = None
                 controller.state = getattr(controller, "state", "waiting_front")
                 msg_str = event.message_str
                 if msg_str == "取消":
@@ -97,7 +98,7 @@ class MirageTankPlugin(Star):
                 event.stop_event()
 
         except Exception as e:
-            logger.error("handle_empty_mention error: " + str(e))
+            logger.error("handle_mirage_session error: " + str(e))
             yield event.plain_result("发生未知错误，请重试喵")
 
     # 普通幻影坦克命令
