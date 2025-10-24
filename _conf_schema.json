@@ -1,0 +1,8 @@
+{
+  "TIMEOUT_SEC": {
+    "description": "超时时间",
+    "type": "int",
+    "hint": "单位：秒，默认值30s",
+    "default": 30
+  }
+}

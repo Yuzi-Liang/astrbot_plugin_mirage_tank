@@ -4,30 +4,38 @@ from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api.message_components import Image as AstrImage
 from astrbot.api import logger
+from astrbot.core import AstrBotConfig
 from astrbot.core.utils.session_waiter import session_waiter, SessionController
-from .config import TIMEOUT_SEC
 from .processor.inference import generate_mirage
 from .processor.utils import save_image_as_png
 
 
 @register("miragetank", "poisama", "幻影坦克生成插件", "1.1")
 class MirageTankPlugin(Star):
-    def __init__(self, context: Context):
+    def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
+        self.config = config
+        self.timeout = self.config.get("TIMEOUT_SEC", "30")
 
     async def _handle_mirage_session(self, event: AstrMessageEvent, mode: str):
         """
         通用会话：接收两张图 -> 生成 -> 发送 -> 清理
         """
         try:
-            yield event.plain_result(f"请发送表图，{TIMEOUT_SEC}s 内有效喵")
+            yield event.plain_result(f"请发送表图，{self.timeout}s 内有效喵")
 
-            @session_waiter(timeout=TIMEOUT_SEC, record_history_chains=False)
+            @session_waiter(timeout=self.timeout, record_history_chains=False)
             async def image_waiter(controller: SessionController, event: AstrMessageEvent):
                 """
                 等待发送图片作为表图/里图
                 """
                 controller.state = getattr(controller, "state", "waiting_front")
+                msg_str = event.message_str
+                if msg_str == "取消":
+                    await event.send(event.plain_result("已取消幻影坦克生成喵~"))
+                    controller.stop()  # 停止会话控制器，会立即结束。
+                    return
+
                 img_msg = event.message_obj.message[0]
 
                 # 如果用户发送的不是图片，则要求用户重新发送
@@ -50,7 +58,7 @@ class MirageTankPlugin(Star):
                         controller.front_img_path = img_path
                         controller.state = "waiting_back"
                         await event.send(event.plain_result("收到表图喵！请发送里图～"))
-                        controller.keep(timeout=TIMEOUT_SEC, reset_timeout=True)
+                        controller.keep(timeout=self.timeout, reset_timeout=True)
                         return
 
                     # 等待发送第二张图片作为里图
