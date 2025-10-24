@@ -34,9 +34,7 @@
 ## 演示截图
 
 <div align="center">
-
-![示例](https://raw.githubusercontent.com/Yuzi-Liang/astrbot_plugin_mirage_tank/master/example.png)
-
+<img src="https://raw.githubusercontent.com/Yuzi-Liang/astrbot_plugin_mirage_tank/master/example.png" width="50%" alt="示例">
 </div>
 
 ## TODO
