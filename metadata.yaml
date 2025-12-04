@@ -1,4 +1,5 @@
 name: mirage_tank
+display_name: 幻影坦克生成插件
 desc: 用于生成幻影坦克图片的插件，支持黑白和彩色两种模式，支持彩色模式下幻影坦克参数的精细调节
 version: v1.2.2
 author: poisama
