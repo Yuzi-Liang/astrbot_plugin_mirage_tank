@@ -29,17 +29,38 @@ class MirageTankPlugin(Star):
         self.config = config
         self.timeout = self.config.get("timeout", 30)
         self.max_img_size = self.config.get("max_img_size", 10)
+        self.a = self.config.get("a", 0.5)
+        self.b = self.config.get("b", 20)
+        self.w = self.config.get("w", 0.7)
 
         if self.timeout <= 0 or self.timeout >= 3600:
-            logger.warning("超时时间不合理，已回退为 30s。")
+            logger.warning("超时时间不合理，已重置为默认值 30s。")
             self.timeout = 30
             self.config["timeout"] = 30
             self.config.save_config()
 
         if self.max_img_size <= 0 or self.max_img_size >= 1024:
-            logger.warning("最大图片尺寸不合理，已回退为 10MB。")
+            logger.warning("最大图片尺寸不合理，已重置为默认值 10MB。")
             self.max_img_size = 10
             self.config["max_img_size"] = 10
+            self.config.save_config()
+
+        if self.a < 0.1 or self.a > 3.0:
+            logger.warning("参数 a 超出范围，已重置为默认值 0.5")
+            self.a = 0.5
+            self.config["a"] = 0.5
+            self.config.save_config()
+
+        if self.b < -50 or self.b > 50:
+            logger.warning("参数 b 超出范围，已重置为默认值 20")
+            self.b = 20
+            self.config["b"] = 20
+            self.config.save_config()
+
+        if self.w < 0 or self.w > 1:
+            logger.warning("参数 w 超出范围，已重置为默认值 0.1")
+            self.b = 0.1
+            self.config["b"] = 0.1
             self.config.save_config()
 
     async def _handle_mirage_session(self, event: AstrMessageEvent, mode: str):
@@ -96,7 +117,8 @@ class MirageTankPlugin(Star):
                         back_img_path = img_path
                         await event.send(event.plain_result("收到里图喵！请等待幻影坦克生成喵～"))
 
-                        result_path = await generate_mirage(controller.front_img_path, back_img_path, mode=mode)
+                        result_path = await generate_mirage(controller.front_img_path, back_img_path, mode=mode,
+                                                            a=self.a, b=self.b, w=self.w)
 
                         await event.send(event.plain_result("幻影坦克生成完毕！请签收喵～"))
                         await event.send(event.chain_result([AstrImage.fromFileSystem(result_path)]))

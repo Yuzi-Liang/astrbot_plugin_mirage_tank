@@ -2,13 +2,31 @@
   "timeout": {
     "description": "超时时间",
     "type": "int",
-    "hint": "单位：秒，默认值30s",
+    "hint": "单位：秒，默认 30s",
     "default": 30
   },
   "max_img_size": {
     "description": "图片最大尺寸",
     "type": "int",
-    "hint": "单位：MB，默认值10MB",
+    "hint": "单位：MB，默认 10MB",
     "default": 10
+  },
+  "a": {
+    "description": "里图亮度缩放系数",
+    "type": "float",
+    "hint": "控制 B 图亮度的乘法缩放。值越大，里图越亮。典型范围：0.3~1.5，默认 0.5。",
+    "default": 0.5
+  },
+  "b": {
+    "description": "里图亮度偏移量",
+    "type": "float",
+    "hint": "控制 B 图亮度的整体偏移。增加该值会整体提亮里图，影响 alpha 强度。典型范围：5~40，默认 20。",
+    "default": 20
+  },
+  "w": {
+    "description": "里图颜色权重",
+    "type": "float",
+    "hint": "越大越偏向里图的颜色，越小越偏向表图颜色。w=0 表示完全使用表图颜色；w=1 表示完全使用里图颜色。范围 0~1，默认 0.1",
+    "default": 0.1
   }
 }
